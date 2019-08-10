@@ -3,12 +3,10 @@
 
 @implementation UniversalDetector
 
--(id)init
-{
+- (id)init {
 	self = [super init];
 	
-	if(self)
-	{
+	if (self) {
 		detectorPtr = AllocUniversalDetector();
 		charsetName = nil;
 		confidence  = 0;
@@ -16,15 +14,13 @@
 	return self;
 }
 
--(void)dealloc
-{
+- (void)dealloc {
 	FreeUniversalDetector(detectorPtr);
 	[charsetName release];
 	[super dealloc];
 }
 
--(void)analyzeContentsOfFile:(NSString *)path
-{
+- (void)analyzeContentsOfFile:(NSString *)path {
     NSData *data = [[NSData alloc] initWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:NULL];
 
 	if (data) {
@@ -33,30 +29,25 @@
 	[data release];
 }
 
--(void)analyzeData:(NSData *)data
-{
+- (void)analyzeData:(NSData *)data {
 	[self analyzeBytes:(const char *)[data bytes] length:(int)[data length]];
 }
 
--(void)analyzeBytes:(const char *)data length:(int)len
-{
+- (void)analyzeBytes:(const char *)data length:(int)len {
 	UniversalDetectorHandleData(detectorPtr, data, len);
 	[charsetName release];
 	charsetName=nil;
 }
 
--(void)reset
-{
+- (void)reset {
 	UniversalDetectorReset(detectorPtr);
 }
 
--(BOOL)done
-{
+- (BOOL)done {
 	return UniversalDetectorDone(detectorPtr);
 }
 
--(NSString *)MIMECharset
-{
+- (NSString *)MIMECharset {
 	if(!charsetName)
 	{
 		const char *cstr=UniversalDetectorCharset(detectorPtr, &confidence);
@@ -66,23 +57,21 @@
 	return charsetName;
 }
 
--(NSStringEncoding)encoding
-{
+- (NSStringEncoding)encoding {
 	NSString *mimecharset=[self MIMECharset];
-	if(!mimecharset) return 0;
+    if (!mimecharset) { return 0; }
 
 	CFStringEncoding cfenc=CFStringConvertIANACharSetNameToEncoding((CFStringRef)mimecharset);
-	if(cfenc==kCFStringEncodingInvalidId) return 0;
+    if (cfenc==kCFStringEncodingInvalidId) { return 0; }
 
 	// UniversalDetector detects CP949 but returns "EUC-KR" because CP949 lacks an IANA name.
 	// Kludge to make strings decode properly anyway.
-	if(cfenc==kCFStringEncodingEUC_KR) cfenc=kCFStringEncodingDOSKorean;
+    if (cfenc==kCFStringEncodingEUC_KR) { cfenc=kCFStringEncodingDOSKorean; }
 
 	return CFStringConvertEncodingToNSStringEncoding(cfenc);
 }
 
--(float)confidence
-{
+- (float)confidence {
 	if(!charsetName) [self MIMECharset];
 	return confidence;
 }

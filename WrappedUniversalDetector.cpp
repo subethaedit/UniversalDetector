@@ -6,29 +6,24 @@
 
 // You are welcome to fix this ObjC wrapper to allow initializing nsUniversalDetector with a non-zero value for aLanguageFilter!
 
-class wrappedUniversalDetector:public nsUniversalDetector
-{
+class wrappedUniversalDetector:public nsUniversalDetector {
 	public:
 	wrappedUniversalDetector():nsUniversalDetector(NS_FILTER_ALL) {}
 
 	void Report(const char* aCharset) {}
 
-	const char *charset(float &confidence)
-	{
-		if(!mGotData)
-		{
+	const char *charset(float &confidence) {
+		if (!mGotData) {
 			confidence=0;
 			return 0;
 		}
 
-		if(mDetectedCharset)
-		{
+		if (mDetectedCharset) {
 			confidence=1;
 			return mDetectedCharset;
 		}
 
-		switch(mInputState)
-		{
+		switch(mInputState) {
 			case eHighbyte:
 			{
 				float proberConfidence;
@@ -58,6 +53,7 @@ class wrappedUniversalDetector:public nsUniversalDetector
 			case ePureAscii:
 				confidence=1.0;
 				return "UTF-8";
+                
 			default:
 				break;
 		}
@@ -66,10 +62,8 @@ class wrappedUniversalDetector:public nsUniversalDetector
 		return 0;
 	}
 
-	bool done()
-	{
-		if(mDetectedCharset) return true;
-		return false;
+	bool done() {
+        return !!mDetectedCharset;
 	}
 
 /*
@@ -92,37 +86,31 @@ class wrappedUniversalDetector:public nsUniversalDetector
 
 extern "C" {
 
-void *AllocUniversalDetector()
-{
+void *AllocUniversalDetector() {
 	return (void *)new wrappedUniversalDetector;
 }
 
-void FreeUniversalDetector(void *detectorPtr)
-{
+void FreeUniversalDetector(void *detectorPtr) {
 	delete (wrappedUniversalDetector *)detectorPtr;
 }
 
-void UniversalDetectorHandleData(void *detectorPtr,const char *data,int length)
-{
+void UniversalDetectorHandleData(void *detectorPtr,const char *data,int length) {
 	wrappedUniversalDetector *detector=(wrappedUniversalDetector *)detectorPtr;
 	if(detector->done()) return;
 	detector->HandleData(data,length);
 }
 
-void UniversalDetectorReset(void *detectorPtr)
-{
+void UniversalDetectorReset(void *detectorPtr) {
 	wrappedUniversalDetector *detector=(wrappedUniversalDetector *)detectorPtr;
 	detector->reset();
 }
 
-int UniversalDetectorDone(void *detectorPtr)
-{
+int UniversalDetectorDone(void *detectorPtr) {
 	wrappedUniversalDetector *detector=(wrappedUniversalDetector *)detectorPtr;
 	return detector->done()?1:0;
 }
 
-const char *UniversalDetectorCharset(void *detectorPtr, float *confidence)
-{
+const char *UniversalDetectorCharset(void *detectorPtr, float *confidence) {
 	wrappedUniversalDetector *detector=(wrappedUniversalDetector *)detectorPtr;
 	return detector->charset(*confidence);
 }
